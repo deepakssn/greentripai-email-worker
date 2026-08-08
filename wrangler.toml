@@ -1,0 +1,7 @@
+name = "email-multi-forwarder"
+main = "src/index.ts"
+compatibility_date = "2026-08-08"
+
+[vars]
+# Comma-separated destination list.
+FORWARD_TO = "deepakssn@gmail.com,balamurugann@gmail.com,sanjay.kunnath@gmail.com,j.mdoss7@gmail.com"
