@@ -1,42 +1,57 @@
-# Cloudflare Email Multi-Forward Worker
+# GreenTrip AI Email Worker
 
-This worker receives email from Cloudflare Email Routing and forwards one inbound
-message to multiple destination email addresses.
+This Worker receives inbound email from Cloudflare Email Routing and forwards one
+message to multiple recipients.
 
-## 1) Configure destination addresses
+## Deploy automatically from Git (no manual `wrangler deploy`)
 
-Edit `wrangler.toml`:
+Use **Workers Builds** in Cloudflare so each push to `main` auto-deploys.
 
-```toml
-[vars]
-FORWARD_TO = "team1@example.com,team2@example.com,team3@example.com"
-```
+1. In Cloudflare dashboard, go to **Workers & Pages**.
+2. Click **Create** -> **Import a repository**.
+3. Connect GitHub and select this repo.
+4. Project type: **Workers**.
+5. Branch to deploy: `main`.
+6. Build command: leave empty (Worker deploys from source).
+7. Root directory: `/` (repo root).
+8. Save and deploy.
 
-## 2) Install and deploy
+After this, every push to `main` triggers Cloudflare build + deploy.
 
-```bash
-cd cloudflare-email-worker
-npm install
-npx wrangler login
-npx wrangler deploy
-```
+## Required runtime variable
 
-## 3) Connect Email Routing action to worker
+Set this in Cloudflare dashboard (not in git):
 
-In Cloudflare dashboard:
+- Key: `FORWARD_TO`
+- Value example: `team1@example.com,team2@example.com,team3@example.com`
 
-1. Go to your domain -> **Email** -> **Email Routing**.
-2. Create (or edit) route for inbound address/pattern.
-3. In route action, choose **Send to a Worker**.
-4. Select deployed worker: `email-multi-forwarder`.
+Where to set:
+- **Workers & Pages** -> `greentripai-email-worker` -> **Settings** -> **Variables and Secrets** -> Add plain text variable.
+
+## Connect Email Routing to this Worker
+
+1. Go to domain -> **Email** -> **Email Routing**.
+2. Create or edit inbound route.
+3. Action: **Send to a Worker**.
+4. Select Worker: `greentripai-email-worker`.
 5. Save route.
 
-## 4) Verify
+## Local optional commands
 
-Send test email to routed address. Worker forwards same message to every address in
-`FORWARD_TO`.
+```bash
+npm install
+npm run dev
+```
 
-## Notes
+Manual deploy command still available if needed:
 
-- Worker rejects email if `FORWARD_TO` is empty or contains invalid email format.
-- Duplicate recipient entries are automatically deduplicated.
+```bash
+npm run deploy
+```
+
+## Behavior
+
+- Rejects email if `FORWARD_TO` missing/empty.
+- Rejects email if any configured recipient is invalid.
+- De-duplicates recipients automatically.
+- Emits detailed logs with `requestId` for tracing failures.
